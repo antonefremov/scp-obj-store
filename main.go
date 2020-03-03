@@ -55,13 +55,13 @@ func uploadFileToS3(s3Client *s3.S3, key string, fileName string) (string, error
 	buffer := make([]byte, size)
 
 	file.Read(buffer)
-	fileBytes := bytes.NewReader(buffer)
+	reader := bytes.NewReader(buffer)
 	fileType := http.DetectContentType(buffer)
 	path := "/media/" + key // or it can also be file.Name()
 	params := &s3.PutObjectInput{
 		Bucket:        aws.String(s3_bucket),
 		Key:           aws.String(path),
-		Body:          fileBytes,
+		Body:          reader,
 		ContentLength: aws.Int64(size),
 		ContentType:   aws.String(fileType),
 	}
