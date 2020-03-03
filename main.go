@@ -39,6 +39,8 @@ func main() {
 		log.Fatalf("failed to download file - %v", err)
 	}
 	log.Printf("downloaded file %s", dResp)
+
+	listFilesInS3(client)
 }
 
 func uploadFileToS3(s3Client *s3.S3, key string, fileName string) (string, error) {
@@ -76,7 +78,6 @@ func uploadFileToS3(s3Client *s3.S3, key string, fileName string) (string, error
 }
 
 func downloadFileFromS3(s3Client *s3.S3, key string) (string, error) {
-
 	cfg := s3Client.Config
 	path := "/media/" + key
 	sess, _ := session.NewSession(&cfg)
@@ -102,6 +103,24 @@ func downloadFileFromS3(s3Client *s3.S3, key string) (string, error) {
 	}
 
 	return file.Name(), nil
+}
+
+func listFilesInS3(s3Client *s3.S3) {
+	var i int64
+
+	params := &s3.ListObjectsV2Input{
+		Bucket: aws.String(s3_bucket),
+	}
+
+	resp, err := s3Client.ListObjectsV2(params)
+	if err != nil {
+		log.Fatalf("failed to list objects in the bucket - %v", err)
+	}
+
+	for i = 0; i < aws.Int64Value(resp.KeyCount); i++ {
+		objContents := resp.Contents[i].String()
+		log.Println(objContents)
+	}
 }
 
 func getS3Client() *s3.S3 {
