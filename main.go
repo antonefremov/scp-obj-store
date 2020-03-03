@@ -18,7 +18,7 @@ const (
 	s3_region             = "us-east-1"
 	s3_bucket             = "hcp-<YOUR-S3-BUCKET>"
 	aws_access_key_id     = "<YOUR-AWS-ACCESS-KEY-ID>"
-	aws_secret_access_key = "<YOUT-AWS-SECRET-ACCESS-KEY>"
+	aws_secret_access_key = "<YOUR-AWS-SECRET-ACCESS-KEY>"
 )
 
 func main() {
@@ -78,16 +78,15 @@ func uploadFileToS3(s3Client *s3.S3, key string, fileName string) (string, error
 }
 
 func downloadFileFromS3(s3Client *s3.S3, key string) (string, error) {
-	cfg := s3Client.Config
 	path := "/media/" + key
-	sess, _ := session.NewSession(&cfg)
-
 	file, err := os.Create("./static/" + "downloaded_pdf.pdf")
 	if err != nil {
 		log.Fatalf("Unable to create a file to download into %v", err)
 	}
-
 	defer file.Close()
+
+	cfg := s3Client.Config
+	sess, _ := session.NewSession(&cfg)
 
 	params := &s3.GetObjectInput{
 		Bucket: aws.String(s3_bucket),
@@ -95,7 +94,6 @@ func downloadFileFromS3(s3Client *s3.S3, key string) (string, error) {
 	}
 
 	downloader := s3manager.NewDownloader(sess)
-
 	_, err = downloader.Download(file, params)
 	if err != nil {
 		log.Fatalf("failed to get the file from the bucket - %v", err)
@@ -106,8 +104,6 @@ func downloadFileFromS3(s3Client *s3.S3, key string) (string, error) {
 }
 
 func listFilesInS3(s3Client *s3.S3) {
-	var i int64
-
 	params := &s3.ListObjectsV2Input{
 		Bucket: aws.String(s3_bucket),
 	}
@@ -117,9 +113,8 @@ func listFilesInS3(s3Client *s3.S3) {
 		log.Fatalf("failed to list objects in the bucket - %v", err)
 	}
 
-	for i = 0; i < aws.Int64Value(resp.KeyCount); i++ {
-		objContents := resp.Contents[i].String()
-		log.Println(objContents)
+	for _, item := range resp.Contents {
+		log.Println(item.String())
 	}
 }
 
